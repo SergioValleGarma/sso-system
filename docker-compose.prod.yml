@@ -23,7 +23,7 @@ services:
       - JwtSettings__Key=EstaEsUnaClaveSuperSecretaYDebeSerMuyLargaParaQueFuncione
       - JwtSettings__Issuer=SingleSignOn
       - JwtSettings__Audience=MisAplicaciones
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
     container_name: sso-backend
     depends_on:
       - sqlserver
@@ -43,7 +43,7 @@ services:
   frontend:
     image: sergiovallegarma/sso-frontend:latest
     ports:
-      - "80:80"
+      - "5173:80"
     container_name: sso-frontend
     depends_on:
       - backend

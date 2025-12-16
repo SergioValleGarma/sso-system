@@ -1,3 +1,11 @@
+# clonar de repositorio
+
+```bash
+git clone https://github.com/sergiovallegarma/sso-system.git
+cd sso-system
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 # Sistema SSO (Single Sign-On)
 
 Sistema de autenticación y autorización desarrollado con:
