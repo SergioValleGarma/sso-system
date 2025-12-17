@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = window.env?.API_URL || 'http://localhost:5000/api';
+const API_URL = window.env?.API_URL || 'https://localhost:7148/api';
 // Asegúrate de que este puerto coincida con tu API .NET (revisa launchSettings.json)
 //const API_URL = 'https://localhost:7148/api'; 
 // O si vas a ejecutar el Backend TAMBIÉN en Docker
