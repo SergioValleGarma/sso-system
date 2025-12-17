@@ -48,11 +48,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",")
+                     ?? new string[] { "http://localhost:5173" }; // Valor por defecto
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         builder => builder
-            .WithOrigins("http://localhost:5173") // Puerto por defecto de Vite
+            .WithOrigins(allowedOrigins) // <--- USAR LA VARIABLE
             .AllowAnyMethod()
             .AllowAnyHeader());
 });

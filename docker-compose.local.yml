@@ -1,5 +1,4 @@
 services:
-  # 1. BASE DE DATOS SQL SERVER
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
@@ -10,9 +9,10 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+      - ./init-db.sql:/tmp/init.sql
     container_name: mi-sqlserver
+    # SQL Server maneja su propio inicio
 
-  # 2. BACKEND (.NET API)
   backend:
     image: sso-backend-img
     build:
@@ -21,22 +21,27 @@ services:
     ports:
       - "5000:8080"
     environment:
-      # Conecta al servicio 'sqlserver' definido arriba
       - ConnectionStrings__SSOConnection=Server=sqlserver;Database=DBSSO;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - JwtSettings__Key=EstaEsUnaClaveSuperSecretaYDebeSerMuyLargaParaQueFuncione
       - JwtSettings__Issuer=SingleSignOn
       - JwtSettings__Audience=MisAplicaciones
-      # Configuración dinámica de CORS (IP de tu máquina)
-      # Reemplaza 192.168.64.229 con tu IP real si cambia
-      - AllowedOrigins=http://localhost:5173,http://192.168.32.1:5173
+      - ASPNETCORE_ENVIRONMENT=Development
     container_name: mi-sso-backend
     depends_on:
       - sqlserver
-    # Espera a que SQL arranque antes de iniciar la API
+    # El backend crea la BD y usuario
     command: >
-      sh -c "echo 'Esperando SQL...' && sleep 15 && dotnet SSO.WebApi.dll"
+      sh -c "
+      echo 'Esperando a que SQL Server esté listo...' &&
+      sleep 45s &&
+      echo 'Creando base de datos y usuario...' &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P YourStrong@Passw0rd -Q \"IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'DBSSO') CREATE DATABASE DBSSO\" &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P YourStrong@Passw0rd -Q \"IF NOT EXISTS(SELECT * FROM sys.sql_logins WHERE name = 'user_dbsso') CREATE LOGIN user_dbsso WITH PASSWORD = 'MwDlw@C849uRsR#hg', CHECK_POLICY = OFF\" &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P YourStrong@Passw0rd -d DBSSO -Q \"IF NOT EXISTS(SELECT * FROM sys.database_principals WHERE name = 'user_dbsso') CREATE USER user_dbsso FOR LOGIN user_dbsso; ALTER ROLE db_owner ADD MEMBER user_dbsso\" &&
+      echo 'Iniciando aplicación...' &&
+      dotnet SSO.WebApi.dll
+      "
 
-  # 3. FRONTEND (React + Nginx)
   frontend:
     image: sso-frontend-img
     build: 
@@ -44,10 +49,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:80"
-    environment:
-      # Inyección de configuración en tiempo de ejecución (runtime)
-      # Apunta al backend usando tu IP local para acceso desde red
-      - API_URL=http://192.168.32.1:5000/api
     container_name: mi-sso-frontend
     depends_on:
       - backend
