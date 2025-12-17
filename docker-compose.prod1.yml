@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    container_name: mi-sqlserver
+    restart: always
+
+  backend:
+    # Descarga tu imagen ya compilada
+    image: sergiovallegarma/sso-api-final:v2.0
+    ports:
+      - "5000:8080"
+    environment:
+      - ConnectionStrings__SSOConnection=Server=sqlserver;Database=DBSSO;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - JwtSettings__Key=EstaEsUnaClaveSuperSecretaYDebeSerMuyLargaParaQueFuncione
+      - JwtSettings__Issuer=SingleSignOn
+      - JwtSettings__Audience=MisAplicaciones
+      - AllowedOrigins=*
+    container_name: mi-sso-backend
+    depends_on:
+      - sqlserver
+    restart: on-failure
+
+  frontend:
+    # Descarga tu imagen ya compilada
+    image: sergiovallegarma/sso-web-final:v2.0
+    ports:
+      - "5173:80"
+    environment:
+      # Permite inyectar la IP desde la consola de tus compañeros
+      - API_URL=${API_URL:-http://44.221.59.4:5000/api}
+    container_name: mi-sso-frontend
+    depends_on:
+      - backend
+
+volumes:
+  sqlserver_data:

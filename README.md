@@ -28,3 +28,7 @@ docker-compose -f docker-compose.prod.yml up -d
 # Frontend: http://localhost:80
 # Backend API: http://localhost:5000
 # Swagger: http://localhost:5000/swagger
+
+**Windows (PowerShell):**
+```powershell
+$env:API_URL="http://SU_IP_DE_ELLOS:5000/api"; docker-compose -f docker-compose.prod.yml up

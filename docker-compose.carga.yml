@@ -1,0 +1,48 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    container_name: mi-sqlserver
+
+  backend:
+    # Nombre de la imagen que se subirá a Docker Hub
+    image: sergiovallegarma/sso-api-final:v2.0
+    build:
+      context: ./SSO
+      dockerfile: SSO.WebApi/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ConnectionStrings__SSOConnection=Server=sqlserver;Database=DBSSO;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - JwtSettings__Key=EstaEsUnaClaveSuperSecretaYDebeSerMuyLargaParaQueFuncione
+      - JwtSettings__Issuer=SingleSignOn
+      - JwtSettings__Audience=MisAplicaciones
+      - AllowedOrigins=*
+    container_name: mi-sso-backend
+    depends_on:
+      - sqlserver
+    restart: on-failure
+
+  frontend:
+    # Nombre de la imagen que se subirá a Docker Hub
+    image: sergiovallegarma/sso-web-final:v2.0
+    build: 
+      context: ./sso-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    environment:
+      - API_URL=http://localhost:5000/api
+    container_name: mi-sso-frontend
+    depends_on:
+      - backend
+
+volumes:
+  sqlserver_data:
