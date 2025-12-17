@@ -32,7 +32,16 @@ export default function Login() {
                 window.location.href = "/dashboard"; // Recarga fuerte para que el context lea el token
             }
         } catch (err) {
-            setError('Credenciales inválidas');
+            console.error(err);
+            if (!err.response) {
+                setError('Error de conexión con el servidor (API no responde).');
+            } else if (err.response.status === 401) {
+                setError('Credenciales inválidas. Verifica tu correo y contraseña.');
+            } else if (err.response.status === 500) {
+                setError('Error interno del servidor. Por favor intenta más tarde.');
+            } else {
+                setError('Ocurrió un error inesperado.');
+            }
         }
     };
 
