@@ -24,11 +24,11 @@ Sistema de autenticación y autorización desarrollado con:
 # Descargar y ejecutar
 docker-compose -f docker-compose.prod.yml up -d
 
+### si desea personalizar la ip puede remplazar la ip de la variable API_URL que se encuentra en el archivo docker-compose.prod.yml
+- API_URL=${API_URL:-http://localhost:5000/api}
+
 # Acceder a la aplicación
-# Frontend: http://localhost:80
+# Frontend: http://localhost:5173
 # Backend API: http://localhost:5000
 # Swagger: http://localhost:5000/swagger
 
-**Windows (PowerShell):**
-```powershell
-$env:API_URL="http://SU_IP_DE_ELLOS:5000/api"; docker-compose -f docker-compose.prod.yml up
